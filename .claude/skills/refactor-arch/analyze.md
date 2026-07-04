@@ -12,6 +12,7 @@ Use as heurísticas de [references/project-analysis.md](references/project-analy
    - Framework **com versão exata** (leia `requirements.txt`, `package.json`, `pyproject.toml`, `go.mod`, etc.)
    - Dependências relevantes
    - Banco de dados (driver/ORM e tabelas — leia os `CREATE TABLE`/models)
+   - **Ferramenta de teste** idiomática da stack, que a Fase 3 usará para gerar os testes (Python/Flask → `pytest`; Node/Express → `jest`/`vitest` + `supertest`). Note se já há testes ou runner configurado no manifesto.
 3. **Identifique o domínio** da aplicação pelos nomes de tabelas, rotas e entidades (ex.: e-commerce, LMS, task manager).
 4. **Mapeie a arquitetura atual**: monolito em poucos arquivos? God class? Camadas parciais (`models/`, `routes/`, `services/`)? Onde vivem rotas, regra de negócio, acesso a dados e configuração?
 5. **Imprima o resumo padronizado** exatamente neste formato:

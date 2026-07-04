@@ -1,6 +1,6 @@
 # Parte 2 — Execução da Refatoração (Fase 3)
 
-> Pré-condição: relatório da Fase 2 aprovado pelo usuário (`y`). Fonte de verdade: o relatório salvo em `reports/` + [references/mvc-guidelines.md](references/mvc-guidelines.md) + [references/refactoring-playbook.md](references/refactoring-playbook.md). Atue somente dentro de `TARGET/`.
+> Pré-condição: relatório da Fase 2 aprovado pelo usuário (`y`). Fonte de verdade: o relatório salvo em `reports/` + [references/mvc-guidelines.md](references/mvc-guidelines.md) + [references/refactoring-playbook.md](references/refactoring-playbook.md) + [references/testing-guidelines.md](references/testing-guidelines.md). Atue somente dentro de `TARGET/`.
 
 ## Princípios
 
@@ -29,12 +29,22 @@ Conforme [references/mvc-guidelines.md](references/mvc-guidelines.md):
 3. Remova o código antigo substituído (não deixar arquivos mortos duplicando lógica).
 4. Atualize manifestos se necessário (novas dependências só quando indispensável).
 
+## Geração de testes unitários (OBRIGATÓRIA — parte da entrega da Fase 3)
+
+Depois de aplicar as transformações, gere uma suíte de testes unitários para as camadas produzidas, seguindo [references/testing-guidelines.md](references/testing-guidelines.md).
+
+1. **Ferramenta conforme a stack** detectada na Fase 1: Python/Flask → `pytest` (+ `pytest-flask` quando testar via app factory); Node/Express → `jest` (ou `vitest`) + `supertest` para endpoints. Sempre a opção mais consolidada da stack.
+2. **Cobertura mínima**: as regras de negócio movidas para models e services/controllers — pelo menos um caminho feliz e um de erro por service, uma regra por model relevante, e um teste de regressão para cada finding CRITICAL/HIGH corrigido (ex.: senha não vaza em `to_dict`, query parametrizada, secret via env).
+3. **Adicione a dependência de teste ao manifesto**: `requirements.txt` (Python) ou `devDependencies` + `"scripts": {"test": ...}` no `package.json` (Node). Coloque os testes em `tests/`.
+4. Os testes devem rodar **sem servidor externo**: banco em memória / fixtures; endpoints via test client (Flask) ou `supertest` (Express, com o `app` exportado sem `listen`).
+
 ## Validação (OBRIGATÓRIA — a fase só termina aqui)
 
 1. **Boot**: instale as dependências e inicie a aplicação conforme o mecanismo do projeto (`python app.py`, `npm start`, ...). Se houver script de seed, rode-o antes. A aplicação deve subir **sem erros nem warnings de deprecation introduzidos**.
 2. **Endpoints**: exercite **todos os endpoints originais** com `curl` (ou o arquivo `api.http` se existir), incluindo casos de sucesso e de erro esperado (404/400). Compare com o contrato original.
-3. Falhou? Corrija e repita. Não declare a fase concluída com validação pendente.
-4. Encerre o servidor ao final.
+3. **Testes unitários**: rode a suíte (`pytest` / `npm test`). **Todos os testes devem passar.** Se algum falhar, corrija o código refatorado — nunca relaxe o teste para verde artificial. Esta verificação complementa (não substitui) o boot + endpoints.
+4. Falhou (boot, endpoints ou testes)? Corrija e repita. Não declare a fase concluída com validação pendente.
+5. Encerre o servidor ao final.
 
 ## Saída padronizada
 
@@ -43,11 +53,12 @@ Conforme [references/mvc-guidelines.md](references/mvc-guidelines.md):
 PHASE 3: REFACTORING COMPLETE
 ================================
 ## New Project Structure
-<árvore de diretórios resultante>
+<árvore de diretórios resultante (incluindo tests/)>
 
 ## Validation
   ✓ Application boots without errors
   ✓ All endpoints respond correctly
+  ✓ Unit tests pass (<runner>: <N> passed)  — comando: <pytest | npm test>
   ✓ Zero anti-patterns remaining
 ================================
 ```

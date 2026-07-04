@@ -49,7 +49,7 @@ A skill é executada a partir do **root do repositório** e recebe como argument
    - **PAUSE OBRIGATORIAMENTE** e pergunte ao usuário: `Phase 2 complete. Proceed with refactoring (Phase 3)? [y/n]` usando a ferramenta AskUserQuestion. **Nenhum arquivo pode ser modificado antes da resposta.**
    - Resposta `n` → encerre a skill agradecendo, sem tocar em nada.
    - Resposta `y` → prossiga para a Fase 3.
-2. **Fase 3** — siga rigorosamente as instruções de [execute.md](execute.md), usando o relatório aprovado como fonte dos problemas a corrigir. A fase termina somente após a validação de runtime (boot + todos os endpoints originais respondendo).
+2. **Fase 3** — siga rigorosamente as instruções de [execute.md](execute.md), usando o relatório aprovado como fonte dos problemas a corrigir. Além de reestruturar para MVC, **gere testes unitários** para as camadas produzidas (models e services/controllers) com a ferramenta adequada à stack. A fase termina somente após a validação de runtime (boot + todos os endpoints originais respondendo + suíte de testes passando).
 
 ## Arquivos de referência (conhecimento de domínio)
 
@@ -62,11 +62,12 @@ Consulte-os nas fases indicadas:
 | [references/report-template.md](references/report-template.md) | Template padronizado do relatório de auditoria | Fase 2 |
 | [references/mvc-guidelines.md](references/mvc-guidelines.md) | Regras do MVC alvo e responsabilidades de cada camada | Fase 3 |
 | [references/refactoring-playbook.md](references/refactoring-playbook.md) | Transformações concretas antes/depois por anti-pattern | Fase 3 |
+| [references/testing-guidelines.md](references/testing-guidelines.md) | Geração de testes unitários por stack (pytest / jest+supertest), o que cobrir, manifesto e execução | Fase 3 |
 
 ## Regras invioláveis
 
 - Nunca pule o Passo 0.
 - Fases 1 e 2 são somente leitura (exceto salvar o relatório em `reports/`).
 - A confirmação `[y/n]` entre a Fase 2 e a Fase 3 é obrigatória — modificação sem aprovação humana é uma violação da skill.
-- A Fase 3 só está completa quando a aplicação sobe sem erros e todos os endpoints originais respondem.
+- A Fase 3 só está completa quando a aplicação sobe sem erros, todos os endpoints originais respondem **e a suíte de testes unitários gerada passa** (`pytest` / `npm test`). Os testes complementam, não substituem, a validação de boot + endpoints.
 - Adapte-se ao contexto: em projeto já parcialmente organizado, corrija violações sem recriar estrutura existente.
