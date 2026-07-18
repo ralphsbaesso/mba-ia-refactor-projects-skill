@@ -267,3 +267,9 @@ pytest                                                                          
 ├── ecommerce-api-legacy/           # Projeto 2 refatorado (Node/Express)
 └── task-manager-api/               # Projeto 3 refatorado (Python/Flask-SQLAlchemy)
 ```
+
+---
+
+## Histórico
+
+A evolução do projeto commit a commit está documentada em [`HISTORY.md`](HISTORY.md).
