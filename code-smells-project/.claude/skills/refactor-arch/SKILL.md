@@ -1,8 +1,7 @@
 ---
 name: refactor-arch
-description: Analisa, audita e refatora qualquer codebase para o padrão MVC (agnóstico de tecnologia). Recebe como argumento obrigatório o diretório do sub-projeto alvo. Executa 3 fases sequenciais - análise, auditoria com relatório e refatoração validada.
+description: Analisa, audita e refatora qualquer codebase para o padrão MVC (agnóstico de tecnologia). Executada de dentro do projeto-alvo (diretório corrente), sem argumentos. Executa 3 fases sequenciais - análise, auditoria com relatório e refatoração validada.
 disable-model-invocation: true
-argument-hint: <diretorio-do-sub-projeto>
 ---
 
 # refactor-arch — Refatoração Arquitetural Automatizada
@@ -12,40 +11,36 @@ Skill agnóstica de tecnologia que analisa, audita e refatora um sub-projeto par
 - **Parte 1 — Análise** (`analyze.md`): Fase 1 (análise da codebase) + Fase 2 (auditoria e relatório). **Não modifica nenhum arquivo.**
 - **Parte 2 — Execução** (`execute.md`): Fase 3 (refatoração MVC + validação de runtime). Só roda após aprovação humana explícita.
 
-## Passo 0 — Validação do argumento (OBRIGATÓRIO, antes de qualquer fase)
+## Passo 0 — Validação do diretório de execução (OBRIGATÓRIO, antes de qualquer fase)
 
-A skill é executada a partir do **root do repositório** e recebe como argumento o diretório do sub-projeto alvo: `$ARGUMENTS`.
+A skill é executada **de dentro do projeto-alvo**: o alvo é sempre o diretório corrente. Ela não recebe nem depende de argumento.
 
-1. **Se nenhum argumento foi informado** (`$ARGUMENTS` vazio): **PARE IMEDIATAMENTE**. Não execute nenhuma fase, não leia nenhum arquivo de projeto. Exiba exatamente esta mensagem de erro e encerre:
+1. **Defina `TARGET = diretório corrente (.)`** — o diretório onde o Claude Code foi iniciado.
 
-   ```
-   ERRO: diretório do sub-projeto não informado.
+2. **Valide que `TARGET` parece a raiz de um projeto**: deve conter um manifesto de dependências (`requirements.txt`, `pyproject.toml`, `package.json`, `go.mod`, `pom.xml`, `Gemfile`, `composer.json`, …) **ou** um entrypoint óbvio de aplicação (`app.py`, `main.py`, `src/app.js`, `index.js`, …). A lista é ilustrativa — use o equivalente da stack encontrada.
 
-   Uso: /refactor-arch <diretorio-do-sub-projeto>
-
-   Sub-projetos disponíveis:
-     - code-smells-project
-     - ecommerce-api-legacy
-     - task-manager-api
-
-   Exemplo: /refactor-arch code-smells-project
-   ```
-
-   (Liste os sub-projetos dinamicamente: diretórios no root que não começam com `.` e não são `reports/`.)
-
-2. **Se o diretório informado não existir** no root do repositório: **PARE IMEDIATAMENTE** com:
+3. **Se `TARGET` NÃO parecer um projeto** (ex.: é a raiz de um repositório que apenas contém sub-projetos): **PARE IMEDIATAMENTE**. Não execute nenhuma fase, não leia nenhum arquivo de projeto. Exiba esta mensagem de erro (listando como candidatos os subdiretórios que não começam com `.` e não são `reports/`) e encerre:
 
    ```
-   ERRO: diretório '<argumento>' não encontrado no root do repositório.
-   Sub-projetos disponíveis: <lista>
+   ERRO: o diretório corrente não parece a raiz de um projeto
+   (nenhum manifesto de dependências ou entrypoint encontrado).
+
+   Entre no projeto-alvo e invoque a skill de lá:
+
+     cd <projeto>
+     claude "/refactor-arch"
+
+   Projetos candidatos encontrados: <lista>
    ```
 
-3. Argumento válido → defina `TARGET = <diretório informado>`. **Todas as fases (análise, auditoria e refatoração) atuam SOMENTE dentro de `TARGET/`.** Nunca leia código nem modifique arquivos de outros sub-projetos. A única escrita fora de `TARGET/` permitida é o relatório em `reports/`.
+4. **Defina o destino do relatório**: `REPORTS_DIR = <raiz do repositório git>/reports/` (use `git rev-parse --show-toplevel`). Se `TARGET` não estiver dentro de um repositório git, use `REPORTS_DIR = ./reports/` no próprio projeto. Crie o diretório se não existir.
+
+5. **Todas as fases (análise, auditoria e refatoração) atuam SOMENTE dentro de `TARGET/`.** Nunca leia código nem modifique arquivos de projetos irmãos. A única escrita fora de `TARGET/` permitida é o relatório em `REPORTS_DIR`.
 
 ## Fluxo das fases
 
 1. **Fases 1 e 2** — siga rigorosamente as instruções de [analyze.md](analyze.md). Ao final da Fase 2:
-   - Salve o relatório em `reports/audit-project-{N}.md` (N: 1 = code-smells-project, 2 = ecommerce-api-legacy, 3 = task-manager-api; outros projetos: use o nome do diretório).
+   - Salve o relatório em `REPORTS_DIR/audit-project-{N}.md` (N: 1 = code-smells-project, 2 = ecommerce-api-legacy, 3 = task-manager-api; outros projetos: use o nome do diretório).
    - **PAUSE OBRIGATORIAMENTE** e pergunte ao usuário: `Phase 2 complete. Proceed with refactoring (Phase 3)? [y/n]` usando a ferramenta AskUserQuestion. **Nenhum arquivo pode ser modificado antes da resposta.**
    - Resposta `n` → encerre a skill agradecendo, sem tocar em nada.
    - Resposta `y` → prossiga para a Fase 3.
@@ -67,7 +62,7 @@ Consulte-os nas fases indicadas:
 ## Regras invioláveis
 
 - Nunca pule o Passo 0.
-- Fases 1 e 2 são somente leitura (exceto salvar o relatório em `reports/`).
+- Fases 1 e 2 são somente leitura (exceto salvar o relatório em `REPORTS_DIR`).
 - A confirmação `[y/n]` entre a Fase 2 e a Fase 3 é obrigatória — modificação sem aprovação humana é uma violação da skill.
 - A Fase 3 só está completa quando a aplicação sobe sem erros, todos os endpoints originais respondem **e a suíte de testes unitários gerada passa** (`pytest` / `npm test`). Os testes complementam, não substituem, a validação de boot + endpoints.
 - Adapte-se ao contexto: em projeto já parcialmente organizado, corrija violações sem recriar estrutura existente.
