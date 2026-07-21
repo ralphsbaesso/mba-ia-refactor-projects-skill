@@ -1,27 +1,30 @@
 # refactor-arch — Refatoração Arquitetural Automatizada com Claude Code
 
-Skill do Claude Code que **analisa, audita e refatora qualquer codebase para o padrão MVC**, de forma agnóstica de tecnologia. Este repositório entrega a skill (`.claude/skills/refactor-arch/`) e o resultado da sua execução sobre três projetos legados de stacks e níveis de organização diferentes.
+Skill do Claude Code que **analisa, audita e refatora qualquer codebase para o padrão MVC**, de forma agnóstica de tecnologia. Este repositório entrega a skill (copiada em `<projeto>/.claude/skills/refactor-arch/` dentro de cada um dos três projetos) e o resultado da sua execução sobre três projetos legados de stacks e níveis de organização diferentes.
 
 > O enunciado original do desafio está preservado em [`docs/CHALLENGE.md`](docs/CHALLENGE.md).
 
-## Abordagem de invocação: skill única na raiz + diretório-alvo
+## Abordagem de invocação: skill dentro de cada projeto
 
-O enunciado sugere **copiar** a pasta da skill para dentro de cada projeto. Optei por **não replicar** a skill: existe **uma única cópia na raiz** do repositório e o sub-projeto alvo é passado como **argumento obrigatório**.
+Conforme o enunciado, a pasta da skill está **copiada para dentro de cada projeto** — as três cópias são **idênticas**:
+
+- `code-smells-project/.claude/skills/refactor-arch/`
+- `ecommerce-api-legacy/.claude/skills/refactor-arch/`
+- `task-manager-api/.claude/skills/refactor-arch/`
+
+A invocação é feita **de dentro do projeto-alvo**, sem argumentos:
 
 ```bash
-# a partir da raiz do repositório
-claude "/refactor-arch code-smells-project"
-claude "/refactor-arch ecommerce-api-legacy"
-claude "/refactor-arch task-manager-api"
+cd code-smells-project
+claude "/refactor-arch"
 ```
 
-Isso é implementado no **Passo 0** do `SKILL.md`, que lê `$ARGUMENTS`, valida o diretório e define `TARGET` — todas as fases atuam **somente** dentro de `TARGET/` (a única escrita fora dele é o relatório em `reports/`):
+Isso é implementado no **Passo 0** do `SKILL.md`, que define `TARGET = diretório corrente` e valida que ele parece a raiz de um projeto (manifesto de dependências ou entrypoint presente) — todas as fases atuam **somente** dentro de `TARGET/` (a única escrita fora dele é o relatório em `REPORTS_DIR` = `reports/` na raiz do repositório git, ou `./reports/` fora de um repo):
 
-- Sem argumento → a skill **para imediatamente** e imprime a mensagem de uso com a lista de sub-projetos disponíveis.
-- Diretório inexistente → a skill **para** com erro.
+- Diretório corrente sem cara de projeto (ex.: a raiz deste repositório) → a skill **para imediatamente** e instrui a entrar no projeto-alvo, listando os candidatos.
 - `disable-model-invocation: true` no frontmatter garante que só o usuário aciona a skill (o modelo não a dispara sozinho).
 
-**Por que essa abordagem:** uma fonte única de verdade (sem N cópias para manter em sincronia), zero acoplamento a um projeto específico e a mesma prova de agnosticismo — a skill roda nas 3 stacks a partir do mesmo lugar, mudando apenas o argumento.
+**Sincronização:** a skill é uma só — se editar uma cópia, replique para as outras duas, por exemplo: `cp -r code-smells-project/.claude/skills/refactor-arch ecommerce-api-legacy/.claude/skills/ && cp -r code-smells-project/.claude/skills/refactor-arch task-manager-api/.claude/skills/`.
 
 ---
 
@@ -204,7 +207,7 @@ Os checklists dos projetos 1 e 2 estão nos respectivos relatórios de validaç�
 
 ### Comportamento nas diferentes stacks
 
-A mesma skill, a partir da raiz, cobriu Python/Flask+raw-sqlite (monolito), Node/Express (God Class assíncrona) e Python/Flask-SQLAlchemy (camadas parciais) — gerando ferramenta de teste idiomática por stack (`pytest` vs `jest+supertest`) e adaptando a estratégia de refatoração ao nível de decay de cada projeto.
+A mesma skill, copiada para dentro de cada projeto, cobriu Python/Flask+raw-sqlite (monolito), Node/Express (God Class assíncrona) e Python/Flask-SQLAlchemy (camadas parciais) — gerando ferramenta de teste idiomática por stack (`pytest` vs `jest+supertest`) e adaptando a estratégia de refatoração ao nível de decay de cada projeto.
 
 ---
 
@@ -217,15 +220,15 @@ A mesma skill, a partir da raiz, cobriu Python/Flask+raw-sqlite (monolito), Node
 
 ### Executar a skill
 
-A partir da **raiz do repositório**, passando o diretório-alvo como argumento:
+**De dentro de cada projeto**, sem argumentos:
 
 ```bash
-claude "/refactor-arch code-smells-project"     # Projeto 1 — Python/Flask
-claude "/refactor-arch ecommerce-api-legacy"    # Projeto 2 — Node/Express
-claude "/refactor-arch task-manager-api"        # Projeto 3 — Python/Flask-SQLAlchemy
+cd code-smells-project    && claude "/refactor-arch"   # Projeto 1 — Python/Flask
+cd ../ecommerce-api-legacy && claude "/refactor-arch"   # Projeto 2 — Node/Express
+cd ../task-manager-api     && claude "/refactor-arch"   # Projeto 3 — Python/Flask-SQLAlchemy
 ```
 
-A skill executa Fase 1 (análise) → Fase 2 (auditoria + relatório em `reports/`) → **pausa e pede `[y/n]`** → Fase 3 (refatoração + testes + validação). Sem argumento, ela para e mostra o uso.
+A skill executa Fase 1 (análise) → Fase 2 (auditoria + relatório em `reports/` na raiz do repositório) → **pausa e pede `[y/n]`** → Fase 3 (refatoração + testes + validação). Invocada fora de um diretório de projeto, ela para no Passo 0 com a instrução de uso.
 
 ### Rodar os projetos já refatorados (para validar)
 
@@ -261,11 +264,13 @@ pytest                                                                          
 ├── CLAUDE.md                       # guia para o Claude Code neste repo
 ├── docs/CHALLENGE.md               # enunciado original do desafio
 ├── HISTORY.md                      # timeline de evolução do projeto
-├── .claude/skills/refactor-arch/   # A SKILL (cópia única, invocada por argumento)
 ├── reports/                        # audit-project-{1,2,3}.md + validações
 ├── code-smells-project/            # Projeto 1 refatorado (Python/Flask)
+│   └── .claude/skills/refactor-arch/   # A SKILL
 ├── ecommerce-api-legacy/           # Projeto 2 refatorado (Node/Express)
+│   └── .claude/skills/refactor-arch/   # cópia idêntica da skill
 └── task-manager-api/               # Projeto 3 refatorado (Python/Flask-SQLAlchemy)
+    └── .claude/skills/refactor-arch/   # cópia idêntica da skill
 ```
 
 ---

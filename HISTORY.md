@@ -146,6 +146,21 @@ Consolidação final: em vez de copiar `.claude/skills` para dentro de cada proj
 
 ---
 
+### 21/07/2026 — 20:41 · `fc3b88b` — Skill copiada para dentro dos 3 projetos (feedback do avaliador)
+
+**`refactor(skill): move refactor-arch into the three projects with cwd-based Step 0`** *(branch `challenge`)*
+
+O avaliador rejeitou a abordagem de cópia única na raiz: o entregável exige a skill **dentro** de `code-smells-project`, `ecommerce-api-legacy` e `task-manager-api`. 29 arquivos, **+1829 / −41 linhas**:
+
+- `.claude/skills/refactor-arch/` replicada (cópias idênticas) em `<projeto>/.claude/skills/refactor-arch/` nos três projetos; cópia da raiz removida.
+- **Passo 0 reescrito**: `TARGET = diretório corrente` (sem argumento) — valida que o cwd parece a raiz de um projeto (manifesto ou entrypoint) e, fora de um projeto, para com instrução de uso. Relatório vai para `REPORTS_DIR` (raiz do repo git → `reports/`; fallback `./reports/`).
+- Invocação passa a ser `cd <projeto> && claude "/refactor-arch"`. `README.md` (abordagem de invocação, como executar, árvore do repo) e `CLAUDE.md` atualizados.
+- Smoke test em cópia isolada: Fases 1–2 rodam de dentro do projeto sem argumento e param no gate `[y/n]`; guard do Passo 0 barra diretório não-projeto.
+
+*Commit executado com suporte do modelo "Fable 5".*
+
+---
+
 ## Resumo da evolução
 
 1. **Fundação de contexto** (`main`): antes de escrever código, Ralph documentou o repositório em `CLAUDE.md`, fixando o entendimento do desafio, dos projetos alvo e das regras de validação.
@@ -153,3 +168,4 @@ Consolidação final: em vez de copiar `.claude/skills` para dentro de cada proj
 3. **Testes na Fase 3** (`challenge`): a skill foi estendida para gerar suítes de teste unitário além da validação comportamental, com um novo arquivo de referência de testing.
 4. **Aplicação nos três alvos** (`challenge`): ao longo de 15–17/07, a skill foi aplicada aos três projetos legados — monólito Flask, God-class Express e API já parcialmente organizada —, cada um com sua auditoria e refatoração para MVC, adaptando-se ao nível de decadência de cada codebase.
 5. **Fechamento** (`challenge`): validação em runtime dos três apps evidenciando o critério de aceite, seguida da reescrita do `README` como entregável e da adoção de uma skill única na raiz.
+6. **Reenvio** (`challenge`): após feedback do avaliador, a skill foi copiada para dentro dos três projetos (cópias idênticas) com o Passo 0 reescrito para operar sobre o diretório corrente, sem argumento — estado final do entregável.
